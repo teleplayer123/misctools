@@ -65,7 +65,17 @@ class PackFW:
                 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("bindir", nargs=1, dest="bindir", help="directory containing binary files to combine")
-    parser.add_argument("csvpath", nargs=1, dest="csvpath", help="path to csv file describing the start and end offsets for each binary")
-    parser.add_argument("--outfile", "-o", type=str, default="output.bin", help="file name for new firmware file")
-    
+    parser.add_argument("bindir", help="directory containing binary files to combine")
+    parser.add_argument("csvpath", help="path to csv file describing the start and end offsets for each binary")
+    parser.add_argument("--outfile", "-o", dest="outfile", type=str, default="output.bin", help="file name for new firmware file")
+    args = parser.parse_args()
+
+    bin_dir = args.bindir
+    csv_path = args.csvpath
+    outifle = args.outfile
+    packer = PackFW(csv_path, bin_dir, outifle)
+
+    packer.write_fw()
+
+if __name__ == "__main__":
+    main()
