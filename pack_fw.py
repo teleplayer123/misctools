@@ -62,7 +62,3 @@ class PackFW:
                 fh.write(data)
         print(f"[+] firmware written to file {self.new_filename}")
                 
-if __name__ == "__main__":
-    pfw = PackFW("test.csv", "test.bin")
-    pfw.parse_mtdparts()
-                
