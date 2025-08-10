@@ -1,3 +1,4 @@
+import argparse
 import os
 import sys
 
@@ -62,3 +63,9 @@ class PackFW:
                 fh.write(data)
         print(f"[+] firmware written to file {self.new_filename}")
                 
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("bindir", nargs=1, dest="bindir", help="directory containing binary files to combine")
+    parser.add_argument("csvpath", nargs=1, dest="csvpath", help="path to csv file describing the start and end offsets for each binary")
+    parser.add_argument("--outfile", "-o", type=str, default="output.bin", help="file name for new firmware file")
+    
