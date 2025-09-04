@@ -3,6 +3,17 @@ from scapy.layers.eap import EAP, EAPOL, EAPOL_KEY, EAP_TLS, EAP_PEAP
 from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11AssoReq, Dot11AssoResp, Dot11Auth, Dot11Elt
 import sys
 
+AFC_POWER_MODES = {
+    0: "LPi",
+    1: "SP",
+    2: "VLP",
+    3: "IndoorEnabled",
+    4: "IndoorAFC",
+    5: "Reserved",
+    6: "Reserved",
+    7: "Reserved",
+}
+
 def get_dot11_pkts(pkts):
     return pkts.filter(lambda x: x.haslayer(Dot11))
 
@@ -26,6 +37,19 @@ def iter_dot11elt_layers(pkt):
             e = e.payload
     else:
         print("[-] No Dot11Elt layers in packet")
+
+def get_ext_tag_data(pkts, ext_tag):
+    data = {}
+    for pkt in pkts:
+        if pkt.haslayer(Dot11Elt):
+            e = pkt[Dot11Elt]
+            #addr2 will be src mac address, addr1 is dest
+            pkt_id = f"{pkt.addr2}_{pkt.time}"
+            while isinstance(e, Dot11Elt):
+                if ext_tag == e.info[:1]:
+                    data[pkt_id] = e.info
+                e = e.payload
+    return data
 
 def get_mgmt_frames(pcap_fname):
     mgmt_frames = {}
@@ -75,6 +99,37 @@ def search_beacon_data(fname, pat):
                 # move to next Dot11Elt layer
                 elt = elt.payload
     return layer_data
+
+def afc_power_mode(fname):
+    mode_by_pkt = {}
+    he_op_hdr = b"$" # he operation ext tag (0x24)
+    pkts = rdpcap(fname)
+    beacons = get_beacon_pkts(pkts)
+    raw_data = get_ext_tag_data(beacons, he_op_hdr)
+    for pkt_id, data in raw_data.items():
+        op_info_control_byte = data[8]
+        reg_info = (op_info_control_byte >> 3) & 0b1111
+        mode_by_pkt[pkt_id] = AFC_POWER_MODES.get(reg_info)
+    return mode_by_pkt
+
+def twt_support(fname, ap=False):
+    val_by_pkt = {}
+    he_cap_hdr = b"#" # he capabilities ext tag (0x23)
+    pkts = rdpcap(fname)
+    if ap == False:
+        filtered_pkts = get_assoc_req(pkts)
+    else:
+        filtered_pkts = get_beacon_pkts(pkts)
+    raw_data = get_ext_tag_data(filtered_pkts, he_cap_hdr)
+    for pkt_id, data in raw_data.items():
+        b = data[1]
+        twt_req = (b >> 1) & 0b1
+        twt_res = (b >> 2) & 0b1
+        val_by_pkt[pkt_id] = {
+            "TWT_Requester_Supported": bool(twt_req),
+            "TWT_Responder_Supported": bool(twt_res)
+        }
+    return val_by_pkt
 
 if __name__ == "__main__":
     pcap_file = sys.argv[1]
