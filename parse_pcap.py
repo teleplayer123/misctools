@@ -49,18 +49,6 @@ def get_assoc_handshake(pcap_fname):
     auth = [pkt for pkt in pkts if pkt.haslayer(Dot11) and pkt.type == 0 and pkt.subtype == 11]
     handshake["authentication"] = auth
     return handshake
-
-def iter_dot11elt_layers(pkt):
-    if pkt.haslayer(Dot11Elt):
-        n = 1
-        e = pkt[Dot11Elt]
-        while isinstance(e, Dot11Elt):
-            print(f"[+] Dot11Elt Layer {n}: {e.info}")
-            n += 1
-            # move to next layer
-            e = e.payload
-    else:
-        print("[-] No Dot11Elt layers in packet")
     
 def parse_eap_pkts(fname):
     eap_types = [EAP, EAPOL, EAP_TLS, EAP_PEAP, EAPOL_KEY]
