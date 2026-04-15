@@ -7,7 +7,7 @@ def get_chars(r: Tuple[int,int]) -> List[str]:
         chars.append(chr(i))
     return chars
 
-def create_pattern(length: int):
+def create_pattern(length: int) -> str:
     alphaUpper = get_chars((65, 91))
     alphaLowwer = get_chars((97, 123))
     nums = get_chars((48, 58))
@@ -27,7 +27,7 @@ def create_pattern(length: int):
         pattern = pattern[:-trunc]
     return pattern
 
-def pattern_offset(val, length):
+def pattern_offset(val: str, length: int) -> int:
     pattern = str(create_pattern(length))
     return pattern.index(str(val))
 
@@ -43,5 +43,6 @@ def main():
     res = pattern_offset(partpat, length)
     return res
 
-res = main()
-print(res)
+if __name__ == "__main__":
+    res = main()
+    print(res)
